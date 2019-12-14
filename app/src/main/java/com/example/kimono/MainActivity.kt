@@ -10,8 +10,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.databinding.DataBindingUtil
-import com.example.kimono.api.Frame
-import com.example.kimono.api.HttpApi
 import com.example.kimono.databinding.ActivityMainBinding
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -150,21 +148,6 @@ class MainActivity : AppCompatActivity() {
                 val out = ByteArrayOutputStream()
                 yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
                 val encoded = Base64.encodeToString(out.toByteArray(), Base64.DEFAULT)
-
-                HttpApi.sendApi.send(Frame(0, encoded)).subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeBy(onSuccess = {
-                        Timber.d("success! ${it.data}")
-                        isLoading = false
-                        val decode = Base64.decode(it.data, Base64.DEFAULT)
-                        val bmp = BitmapFactory.decodeByteArray(decode, 0, decode.size)
-                        binding.viewFinder2.setImageBitmap(bmp)
-//                            image.close()
-                    }, onError = {
-                        Timber.e(it)
-                        isLoading = false
-//                            image.close()
-                    }).addTo(disposable)
 
                 Timber.d("come on")
 
