@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun stream() {
-        val channel = ManagedChannelBuilder.forAddress("10.0.1.59", 5678)
+        val channel = ManagedChannelBuilder.forAddress("47.74.3.96", 30001)
             .usePlaintext()
             .build()
         val asyncStub = OverlayGrpc.newStub(channel)
@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity() {
             .build()
         val imageAnalysis = ImageAnalysis(imageAnalysisConfig)
 
-        val channel = ManagedChannelBuilder.forAddress("10.0.1.59", 5678)
+        val channel = ManagedChannelBuilder.forAddress("47.74.3.96", 30001)
             .usePlaintext()
             .build()
         val asyncStub = OverlayGrpc.newStub(channel)
@@ -190,6 +190,8 @@ class MainActivity : AppCompatActivity() {
             override fun onNext(value: Frame) {
                 Log.d("TAG", "aaaaaaa")
                 print(value)
+                val bmp = BitmapFactory.decodeByteArray(value.data.toByteArray(),0, value.data.toByteArray().size)
+                binding.viewFinder2.setImageBitmap(bmp)
             }
 
             override fun onError(t: Throwable) {
