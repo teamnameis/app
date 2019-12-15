@@ -21,7 +21,7 @@ data class Frame(
     val data: String
 )
 object HttpApi {
-    private const val BASE_URL = "http://10.0.1.14:1234"
+    private const val BASE_URL = "http://47.74.3.96:30000"
     private val okHttpClient: OkHttpClient = OkHttpClient
         .Builder()
         .addNetworkInterceptor(HttpLoggingInterceptor().apply {
