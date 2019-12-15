@@ -4,23 +4,33 @@ import android.Manifest
 import android.graphics.*
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.util.Size
+import android.view.FrameMetrics
 import android.view.Surface
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.databinding.DataBindingUtil
 import com.example.kimono.databinding.ActivityMainBinding
+import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
+import io.grpc.stub.StreamObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import okio.ByteString
+import org.teamnameis.be.Frame
+import org.teamnameis.be.OverlayGrpc
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
 
 @RuntimePermissions
 class MainActivity : AppCompatActivity() {
@@ -34,6 +44,38 @@ class MainActivity : AppCompatActivity() {
         Timber.plant(Timber.DebugTree())
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         startCameraWithPermissionCheck()
+
+        // stream()
+    }
+
+    fun stream() {
+        val channel = ManagedChannelBuilder.forAddress("10.0.1.59", 5678)
+            .usePlaintext()
+            .build()
+        val asyncStub = OverlayGrpc.newStub(channel)
+
+        val finishLatch = CountDownLatch(1)
+        val requestObserver = asyncStub.send(object:StreamObserver<Frame> {
+            override fun onNext(value: Frame) {
+                Log.d("TAG", "aaaaaaa")
+                print(value)
+            }
+
+            override fun onError(t: Throwable) {
+                Timber.e(t)
+            }
+
+            override fun onCompleted() {
+                print("onCompleted")
+            }
+        })
+
+        Log.d("TAG", "aa")
+        requestObserver.onNext(Frame.newBuilder().setId(100).build())
+        requestObserver.onNext(Frame.newBuilder().setId(100).build())
+        requestObserver.onNext(Frame.newBuilder().setId(100).build())
+        requestObserver.onCompleted()
+        finishLatch.await(10, TimeUnit.SECONDS);
     }
 
     override fun onDestroy() {
@@ -122,6 +164,26 @@ class MainActivity : AppCompatActivity() {
             .build()
         val imageAnalysis = ImageAnalysis(imageAnalysisConfig)
 
+        val channel = ManagedChannelBuilder.forAddress("10.0.1.59", 5678)
+            .usePlaintext()
+            .build()
+        val asyncStub = OverlayGrpc.newStub(channel)
+
+        val requestObserver = asyncStub.send(object:StreamObserver<Frame> {
+            override fun onNext(value: Frame) {
+                Log.d("TAG", "aaaaaaa")
+                print(value)
+            }
+
+            override fun onError(t: Throwable) {
+                Timber.e(t)
+            }
+
+            override fun onCompleted() {
+                print("onCompleted")
+            }
+        })
+
         imageAnalysis.setAnalyzer({
             binding.viewFinder2.post(it)
         }, { image: ImageProxy, rotationDegrees: Int ->
@@ -147,9 +209,14 @@ class MainActivity : AppCompatActivity() {
                 val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
                 val out = ByteArrayOutputStream()
                 yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
-                val encoded = Base64.encodeToString(out.toByteArray(), Base64.DEFAULT)
+//                val encoded = Base64.encodeToString(out.toByteArray(), Base64.DEFAULT)
 
                 Timber.d("come on")
+
+                val frame = Frame.newBuilder()
+                    .setId(1)
+                    .setData(com.google.protobuf.ByteString.copyFrom(out.toByteArray())).build()
+                requestObserver.onNext(frame)
 
 //                Api.sendApi.send(frame).subscribeOn(Schedulers.io())
 //                        .observeOn(AndroidSchedulers.mainThread())
