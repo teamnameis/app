@@ -191,11 +191,15 @@ class MainActivity : AppCompatActivity() {
                 Log.d("TAG", "aaaaaaa")
                 print(value)
                 val bmp = BitmapFactory.decodeByteArray(value.data.toByteArray(),0, value.data.toByteArray().size)
-                binding.viewFinder2.setImageBitmap(bmp)
+                binding.viewFinder2.post {
+                    binding.viewFinder2.setImageBitmap(bmp)
+                }
+                isLoading = false
             }
 
             override fun onError(t: Throwable) {
                 Timber.e(t)
+                isLoading = false
             }
 
             override fun onCompleted() {
