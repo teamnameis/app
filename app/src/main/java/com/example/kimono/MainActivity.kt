@@ -1,6 +1,8 @@
 package com.example.kimono
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.os.Bundle
 import android.util.Base64
@@ -8,7 +10,6 @@ import android.util.Log
 import android.util.Size
 import android.view.FrameMetrics
 import android.view.Surface
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.databinding.DataBindingUtil
@@ -34,7 +35,22 @@ import java.util.concurrent.TimeUnit
 
 @RuntimePermissions
 class MainActivity : AppCompatActivity() {
+    companion object {
+        val a = "AAA"
+        fun createIntent(context: Context, id: Int): Intent {
+            return Intent(context, MainActivity::class.java).apply {
+                putExtra(a, id)
+            }
+        }
 
+        fun MainActivity.parseId(): Int {
+            return intent.getIntExtra(a, 0)
+        }
+    }
+
+    private val id :Int by lazy {
+        parseId()
+    }
     private lateinit var binding: ActivityMainBinding
     private val disposable = CompositeDisposable()
 
@@ -96,31 +112,31 @@ class MainActivity : AppCompatActivity() {
     @NeedsPermission(Manifest.permission.CAMERA)
     fun startCamera() {
         // Create configuration object for the viewfinder use case
-        val previewConfig = PreviewConfig.Builder().apply {
-            setTargetResolution(Size(640, 480))
-        }.build()
-
-
-        // Build the viewfinder use case
-        val preview = Preview(previewConfig)
-
-        // Every time the viewfinder is updated, recompute layout
-        preview.setOnPreviewOutputUpdateListener {
-
-            // To update the SurfaceTexture, we have to remove it and re-add it
-//            val parent = binding.viewFinder.parent as ViewGroup
-//            parent.removeView(binding.viewFinder)
-//            parent.addView(binding.viewFinder, 0)
+//        val previewConfig = PreviewConfig.Builder().apply {
+//            setTargetResolution(Size(640, 480))
+//        }.build()
 //
-//            binding.viewFinder.surfaceTexture = it.surfaceTexture
-            updateTransform()
-        }
+//
+//        // Build the viewfinder use case
+//        val preview = Preview(previewConfig)
+//
+//        // Every time the viewfinder is updated, recompute layout
+//        preview.setOnPreviewOutputUpdateListener {
+//
+//            // To update the SurfaceTexture, we have to remove it and re-add it
+////            val parent = binding.viewFinder.parent as ViewGroup
+////            parent.removeView(binding.viewFinder)
+////            parent.addView(binding.viewFinder, 0)
+////
+////            binding.viewFinder.surfaceTexture = it.surfaceTexture
+//            updateTransform()
+//        }
 
         // Bind use cases to lifecycle
         // If Android Studio complains about "this" being not a LifecycleOwner
         // try rebuilding the project or updating the appcompat dependency to
         // version 1.1.0 or higher.
-        CameraX.bindToLifecycle(this, preview)
+//        CameraX.bindToLifecycle(this, preview)
         val imageCaptureConfig = ImageCaptureConfig.Builder()
             .apply {
                 // We don't set a resolution for image capture; instead, we
@@ -128,8 +144,9 @@ class MainActivity : AppCompatActivity() {
                 // resolution based on aspect ration and requested mode
                 setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
             }.build()
-        val imageCapture = ImageCapture(imageCaptureConfig)
-        binding.captureButton.setOnClickListener {
+//        val imageCapture = ImageCapture(imageCaptureConfig)
+//        binding.capt1
+//        ureButton.setOnClickListener {
             //            imageCapture.takePicture(ThreadPerTaskExecutor(),
 //                    object : ImageCapture.OnImageCapturedListener() {
 //                        override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
@@ -152,7 +169,7 @@ class MainActivity : AppCompatActivity() {
 //                            Timber.e(cause)
 //                        }
 //                    })
-        }
+//        }
         a()
 //        CameraX.bindToLifecycle(this, preview, imageCapture)
     }
@@ -209,7 +226,26 @@ class MainActivity : AppCompatActivity() {
                 val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
                 val out = ByteArrayOutputStream()
                 yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
+//<<<<<<< HEAD
+////                val encoded = Base64.encodeToString(out.toByteArray(), Base64.DEFAULT)
+//=======
 //                val encoded = Base64.encodeToString(out.toByteArray(), Base64.DEFAULT)
+//
+//                HttpApi.sendApi.send(Frame(id, encoded)).subscribeOn(Schedulers.io())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribeBy(onSuccess = {
+//                        Timber.d("success! ${it.data}")
+//                        isLoading = false
+//                        val decode = Base64.decode(it.data, Base64.DEFAULT)
+//                        val bmp = BitmapFactory.decodeByteArray(decode, 0, decode.size)
+//                        binding.viewFinder2.setImageBitmap(bmp)
+////                            image.close()
+//                    }, onError = {
+//                        Timber.e(it)
+//                        isLoading = false
+////                            image.close()
+//                    }).addTo(disposable)
+//>>>>>>> master
 
                 Timber.d("come on")
 
@@ -218,17 +254,6 @@ class MainActivity : AppCompatActivity() {
                     .setData(com.google.protobuf.ByteString.copyFrom(out.toByteArray())).build()
                 requestObserver.onNext(frame)
 
-//                Api.sendApi.send(frame).subscribeOn(Schedulers.io())
-//                        .observeOn(AndroidSchedulers.mainThread())
-//                        .subscribeBy(onSuccess = {
-//                            Timber.d("success! ${it.data}")
-//                            isLoading = false
-////                            image.close()
-//                        }, onError = {
-//                            Timber.e(it)
-//                            isLoading = false
-////                            image.close()
-//                        }).addTo(disposable)
             } else {
                 Timber.e("access!?")
 //                image.close()
